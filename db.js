@@ -30,12 +30,10 @@ const getOfferByLink = (request, response) => {
         })
     }
 
-    pool.query('SELECT * FROM job_offers WHERE job_offer_link = $1', [link], (error, results) => {
+    pool.query('SELECT * FROM job_offers WHERE offer_link = $1', [link], (error, results) => {
         if (error) {
-            throw new Error({
-                code: 500,
-                message: 'something went wrong',
-            })
+            console.log(error);
+            response.status(500).send('Internal server error');
         }
         else {
             response.status(200).json(results.rows);
@@ -56,21 +54,18 @@ const createOffer = (request, response) => {
 
     pool.query('SELECT * FROM job_offers WHERE job_offer_link = $1', [link], (error, results) => {
         if (error) {
-            throw new Error({
-                code: 500,
-                message: 'something went wrong',
-            })
+            response.status(500).send('Internal server error');
+            return;
         }
         if (results && results.length > 0) {
-            throw new Error({
-                code: 400,
-                message: 'record with that link already exists',
-            })
+            response.status(400).send('record with that link already exists');
+            return;
         }
         const query = createOfferQueryConstructor(request.body);
         pool.query(query, (error, results) => {
             if (error) {
                 console.log('error', error);
+                response.status(500).send('Internal server error');
             }
             else {
                 response.status(201).send('Created record')

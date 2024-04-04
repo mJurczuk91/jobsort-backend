@@ -43,7 +43,7 @@ app.use((err, req, res, next) => {
 });
 
 
-app.get('/offer', getOfferByLink);
+app.post('/offer', getOfferByLink);
 app.get('/offers', getOffers);
 app.post('/offer', createOffer);
 
