@@ -9,7 +9,7 @@ const pool = new Pool({
 });
 
 const getOffers = (request, response) => {
-    pool.query('SELECT * FROM job_offers ORDER BY offer_valid_date ASC', (error, results) => {
+    pool.query('SELECT * FROM job_offers WHERE is_junior_friendly = true ORDER BY offer_valid_date ASC', (error, results) => {
         if (error) {
             throw new Error({
                 code: 500,
@@ -52,7 +52,7 @@ const createOffer = (request, response) => {
         message: 'offer link is required'
     });
 
-    pool.query('SELECT * FROM job_offers WHERE job_offer_link = $1', [link], (error, results) => {
+    pool.query('SELECT * FROM job_offers WHERE offer_link = $1', [link], (error, results) => {
         if (error) {
             response.status(500).send('Internal server error');
             return;
@@ -128,7 +128,7 @@ const createOfferQueryConstructor = (offer) => {
     }
     if (offerValidDate) {
         fields.push('offer_valid_date');
-        values.push(offerValidDate);
+        values.push(`'${offerValidDate}'::date`);
     }
 
     const queryString = `

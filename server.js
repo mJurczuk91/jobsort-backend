@@ -36,14 +36,13 @@ app.use((err, req, res, next) => {
         console.error('Error:', message);
         res.status(code).send(message);
     } catch (e) {
-        console.log('ERROR HANDLING MIDDLEWARE');
         console.log(JSON.parse(e));
         res.status(500).send('Something went wrong')
     }
 });
 
 
-app.post('/offer', getOfferByLink);
+app.post('/offerByLink', getOfferByLink);
 app.get('/offers', getOffers);
 app.post('/offer', createOffer);
 
