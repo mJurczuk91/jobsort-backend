@@ -42,100 +42,57 @@ const getOfferByLink = (request, response) => {
 
 }
 
-const createOffer = (request, response) => {
-    const {
-        link,
-    } = { ...request.body };
-
-    if (!link) throw new Error({
-        code: 400,
-        message: 'offer link is required'
-    });
-
-    pool.query('SELECT * FROM job_offers WHERE offer_link = $1', [link], (error, results) => {
-        if (error) {
-            response.status(500).send('Internal server error');
-            return;
-        }
-        if (results && results.length > 0) {
-            response.status(400).send('record with that link already exists');
-            return;
-        }
-        const query = createOfferQueryConstructor(request.body);
-        pool.query(query, (error, results) => {
-            if (error) {
-                console.log('error', error);
-                response.status(500).send('Internal server error');
+const createOffer = async (request, response) => {
+    const offer = { ...request.body };
+    for (let requiredField of [
+        'url',
+        'description',
+        'technologies',
+        'offerValidDate',
+        'isJuniorFriendly',
+        'noExperienceRequired',
+    ]) {
+        if (offer[requiredField] === undefined) {
+            console.log('chuj');
+            if (offer.url) {
+                response.status(400).send(`failed to create record for ${offer.link}, ${requiredField} is undefined`);
+                return;
+            } else {
+                response.status(400).send(`failed to create record for offer with undefined link, offer data: ${JSON.stringify(offer)}`);
+                return;
             }
-            else {
-                response.status(201).send('Created record')
-            }
-        })
-    })
-}
-
-const createOfferQueryConstructor = (offer) => {
-    const fields = [];
-    const values = [];
-    const {
-        link,
-        title,
-        description,
-        technologies,
-        responsibilities,
-        requirements,
-        optionalRequirements,
-        offerValidDate,
-        isJuniorFriendly,
-        noExperienceRequired,
-    } = { ...offer };
-
-    if (link) {
-        fields.push('offer_link');
-        values.push(`'${link}'`);
-    }
-    if (title) {
-        fields.push('title');
-        values.push(`'${title}'`);
-    }
-    if (description) {
-        fields.push('description');
-        values.push(`'${description}'`);
-    }
-    if (technologies && technologies.length > 0) {
-        fields.push('technologies');
-        values.push(`ARRAY [${[technologies.map(row => `'${row}'`)]}]`);
-    }
-    if (responsibilities && responsibilities.length > 0) {
-        fields.push('responsibilities');
-        values.push(`ARRAY [${[responsibilities.map(row => `'${row}'`)]}]`);
-    }
-    if (requirements && requirements.length > 0) {
-        fields.push('requirements');
-        values.push(`ARRAY [${[requirements.map(row => `'${row}'`)]}]`);
-    }
-    if (optionalRequirements && optionalRequirements.length > 0) {
-        fields.push('optional_requirements');
-        values.push(`ARRAY [${[optionalRequirements.map(row => `'${row}'`)]}]`);
-    }
-    if (isJuniorFriendly) {
-        fields.push('is_junior_friendly');
-        values.push(isJuniorFriendly);
-    }
-    if (noExperienceRequired) {
-        fields.push('no_experience_required');
-        values.push(noExperienceRequired);
-    }
-    if (offerValidDate) {
-        fields.push('offer_valid_date');
-        values.push(`'${offerValidDate}'::date`);
+        }
     }
 
-    const queryString = `
-    INSERT INTO job_offers(${[...fields]})
-    VALUES (${[...values]});`
+    const exists = await pool.query('SELECT * FROM job_offers WHERE offer_url = $1', [offer.url]);
+    if(exists && exists.rowCount > 0){
+        response.status(400).send('record with that url already exists');
+        return;
+    }
 
-    return queryString;
+    const queryText = 'INSERT INTO job_offers(offer_url, description, technologies, offer_valid_date, is_junior_friendly, no_experience_required) VALUES ($1, $2, $3, $4, $5, $6)';
+    const queryValues = [
+        offer.url,
+        offer.description,
+        offer.technologies,
+        offer.offerValidDate,
+        offer.isJuniorFriendly,
+        offer.noExperienceRequired,
+    ];
+
+    try{
+        await pool.query(queryText, queryValues);
+    } catch(e) {
+        console.log('ERROR CREATING AN OFFER RECORD');
+        for(let key of Object.keys(e)){
+            console.log(key, e[key]);
+        }
+        response.status(400).send('Failed to create record');
+        return;
+    }
+
+    response.status(200).send();
+    return;
 }
 
 module.exports = {

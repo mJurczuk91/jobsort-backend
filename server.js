@@ -36,7 +36,7 @@ app.use((err, req, res, next) => {
         console.error('Error:', message);
         res.status(code).send(message);
     } catch (e) {
-        console.log(JSON.parse(e));
+        console.log(e);
         res.status(500).send('Something went wrong')
     }
 });
