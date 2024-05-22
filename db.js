@@ -9,7 +9,7 @@ const pool = new Pool({
 });
 
 const getOffers = (request, response) => {
-    pool.query('SELECT * FROM job_offers WHERE is_junior_friendly = true AND offer_valid_date > CURRENT_DATE+1 ORDER BY offer_valid_date DESC', (error, results) => {
+    pool.query('SELECT * FROM job_offers WHERE is_junior_friendly = true AND offer_valid_date < CURRENT_DATE+1 ORDER BY offer_valid_date DESC', (error, results) => {
         if (error) {
             throw new Error({
                 code: 500,
@@ -30,7 +30,7 @@ const getOfferByLink = (request, response) => {
         })
     }
 
-    pool.query('SELECT * FROM job_offers WHERE offer_link = $1', [link], (error, results) => {
+    pool.query('SELECT * FROM job_offers WHERE offer_url = $1', [link], (error, results) => {
         if (error) {
             console.log(error);
             response.status(500).send('Internal server error');
