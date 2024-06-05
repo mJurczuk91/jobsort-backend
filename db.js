@@ -9,7 +9,7 @@ const pool = new Pool({
 });
 
 const getOffers = (request, response) => {
-    pool.query('SELECT * FROM job_offers WHERE is_junior_friendly = true AND offer_valid_date < CURRENT_DATE+1 ORDER BY offer_valid_date DESC', (error, results) => {
+    pool.query('SELECT * FROM job_offers  WHERE offer_valid_date > CURRENT_DATE+1 ORDER BY offer_valid_date DESC', (error, results) => {
         if (error) {
             throw new Error({
                 code: 500,
