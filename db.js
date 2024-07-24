@@ -53,7 +53,6 @@ const createOffer = async (request, response) => {
         'noExperienceRequired',
     ]) {
         if (offer[requiredField] === undefined) {
-            console.log('chuj');
             if (offer.url) {
                 response.status(400).send(`failed to create record for ${offer.link}, ${requiredField} is undefined`);
                 return;
